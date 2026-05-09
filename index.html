@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberIntel AI — Threat Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/animations.css">
+
+<style>
+/* ── PROVIDER PILLS ─────────────────────────────────── */
+.provider-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.provider-pill {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text3);
+  font-family: var(--font-mono);
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 5px;
+}
+.provider-pill:hover { color: var(--text2); border-color: var(--border2); }
+.provider-pill.active[data-provider="claude"]  { background: rgba(0,255,136,0.1);   border-color: var(--green);           color: var(--green); }
+.provider-pill.active[data-provider="openai"]  { background: rgba(16,163,127,0.1);  border-color: #10a37f;                color: #10a37f; }
+.provider-pill.active[data-provider="gemini"]  { background: rgba(66,133,244,0.1);  border-color: #4285f4;                color: #4285f4; }
+.provider-pill.active[data-provider="grok"]    { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo"><i class="ti ti-radar"></i></div>
+      <div>
+        <div class="brand-name">Cyber<span>Intel</span> AI</div>
+        <div class="brand-sub">THREAT INTELLIGENCE PLATFORM</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-indicator">
+        <div class="pulse-dot" id="statusDot"></div>
+        <span id="statusText">STANDBY</span>
+      </div>
+      <div class="header-time" id="headerTime"></div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- API KEYS -->
+      <div class="sidebar-section">
+        <div class="sidebar-label"><i class="ti ti-key"></i> API KEYS</div>
+        <div class="keys-toggle" id="keysToggle">
+          <span>Configure API keys</span>
+          <i class="ti ti-chevron-down"></i>
+        </div>
+        <div class="keys-panel" id="keysPanel">
+
+          <!-- PROVIDER SELECTOR -->
+          <div class="provider-pills" id="providerPills">
+            <div class="provider-pill active" data-provider="claude">
+              <i class="ti ti-sparkles"></i> Claude
+            </div>
+            <div class="provider-pill" data-provider="openai">
+              <i class="ti ti-brand-openai"></i> ChatGPT
+            </div>
+            <div class="provider-pill" data-provider="gemini">
+              <i class="ti ti-diamond"></i> Gemini
+            </div>
+            <div class="provider-pill" data-provider="grok">
+              <i class="ti ti-brand-x"></i> Grok
+            </div>
+          </div>
+
+          <!-- DYNAMIC AI KEY INPUT -->
+          <div class="key-input-group">
+            <div class="key-label" id="aiKeyLabel">ANTHROPIC API KEY *</div>
+            <div class="key-input-wrap">
+              <input type="password" id="keyAI" placeholder="sk-ant-..." />
+              <button class="key-eye" data-target="keyAI"><i class="ti ti-eye"></i></button>
+            </div>
+          </div>
+
+          <!-- OTHER KEYS (unchanged) -->
+          <div class="key-input-group">
+            <div class="key-label">ALIENVAULT OTX KEY</div>
+            <div class="key-input-wrap">
+              <input type="password" id="keyOTX" placeholder="optional" />
+              <button class="key-eye" data-target="keyOTX"><i class="ti ti-eye"></i></button>
+            </div>
+          </div>
+          <div class="key-input-group">
+            <div class="key-label">MALWAREBAZAAR KEY</div>
+            <div class="key-input-wrap">
+              <input type="password" id="keyMalware" placeholder="optional" />
+              <button class="key-eye" data-target="keyMalware"><i class="ti ti-eye"></i></button>
+            </div>
+          </div>
+          <div class="key-input-group">
+            <div class="key-label">VIRUSTOTAL KEY</div>
+            <div class="key-input-wrap">
+              <input type="password" id="keyVT" placeholder="optional" />
+              <button class="key-eye" data-target="keyVT"><i class="ti ti-eye"></i></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DATE FILTER -->
+      <div class="sidebar-section">
+        <div class="sidebar-label"><i class="ti ti-calendar"></i> DATE RANGE</div>
+        <div class="date-pills">
+          <div class="date-pill active" data-range="today">Today</div>
+          <div class="date-pill" data-range="yesterday">Yesterday</div>
+          <div class="date-pill" data-range="7d">Last 7d</div>
+          <div class="date-pill" data-range="30d">Last 30d</div>
+          <div class="date-pill" data-range="custom">Custom</div>
+        </div>
+        <div class="custom-date-range" id="customDateRange">
+          <label>FROM</label>
+          <input type="date" id="dateFrom" />
+          <label>TO</label>
+          <input type="date" id="dateTo" />
+        </div>
+      </div>
+
+      <!-- SEVERITY -->
+      <div class="sidebar-section">
+        <div class="sidebar-label"><i class="ti ti-alert-triangle"></i> SEVERITY</div>
+        <div class="severity-pills">
+          <div class="sev-pill active" data-sev="Critical">Critical</div>
+          <div class="sev-pill active" data-sev="High">High</div>
+          <div class="sev-pill active" data-sev="Medium">Medium</div>
+          <div class="sev-pill active" data-sev="Low">Low</div>
+        </div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="sidebar-section">
+        <div class="sidebar-label"><i class="ti ti-tag"></i> CATEGORIES</div>
+        <button class="master-select-btn" id="selectAllBtn">Select All 16 Categories</button>
+
+        <div class="cat-section">
+          <div class="cat-section-header">
+            <div class="cat-section-title cyber"><i class="ti ti-shield"></i> CYBER (1-8)</div>
+            <div class="cat-ctrl-btns">
+              <button class="cat-ctrl-btn" data-group-action="select" data-group="cyber">All</button>
+              <button class="cat-ctrl-btn" data-group-action="clear"  data-group="cyber">Clear</button>
+            </div>
+          </div>
+          <div class="cat-pills" id="cyberCats">
+            <div class="cat-pill active cyber" data-cat="CVE/Exploit"        data-group="cyber">CVE / Exploit</div>
+            <div class="cat-pill active cyber" data-cat="Malware/Ransomware" data-group="cyber">Malware / Ransomware</div>
+            <div class="cat-pill active cyber" data-cat="Cyber Attack"       data-group="cyber">Cyber Attack</div>
+            <div class="cat-pill active cyber" data-cat="Data Breach"        data-group="cyber">Data Breach</div>
+            <div class="cat-pill active cyber" data-cat="Nation-State"       data-group="cyber">Nation-State</div>
+            <div class="cat-pill active cyber" data-cat="New Tool"           data-group="cyber">New Tool</div>
+            <div class="cat-pill active cyber" data-cat="New Technology"     data-group="cyber">New Technology</div>
+            <div class="cat-pill active cyber" data-cat="Threat Actor"       data-group="cyber">Threat Actor</div>
+          </div>
+        </div>
+
+        <div class="cat-section">
+          <div class="cat-section-header">
+            <div class="cat-section-title ai"><i class="ti ti-brain"></i> AI (9-16)</div>
+            <div class="cat-ctrl-btns">
+              <button class="cat-ctrl-btn" data-group-action="select" data-group="ai">All</button>
+              <button class="cat-ctrl-btn" data-group-action="clear"  data-group="ai">Clear</button>
+            </div>
+          </div>
+          <div class="cat-pills" id="aiCats">
+            <div class="cat-pill active ai" data-cat="AI Model Attacks"      data-group="ai">AI Model Attacks</div>
+            <div class="cat-pill active ai" data-cat="AI-Powered Attacks"    data-group="ai">AI-Powered Attacks</div>
+            <div class="cat-pill active ai" data-cat="LLM Vulnerabilities"   data-group="ai">LLM Vulnerabilities</div>
+            <div class="cat-pill active ai" data-cat="AI Supply Chain"       data-group="ai">AI Supply Chain</div>
+            <div class="cat-pill active ai" data-cat="AI Surveillance"       data-group="ai">AI Surveillance</div>
+            <div class="cat-pill active ai" data-cat="AI Infrastructure"     data-group="ai">AI Infrastructure</div>
+            <div class="cat-pill active ai" data-cat="AI Policy & Regulation" data-group="ai">AI Policy &amp; Regulation</div>
+            <div class="cat-pill active ai" data-cat="AI Security Research"  data-group="ai">AI Security Research</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOURCE STATUS -->
+      <div class="sidebar-section">
+        <div class="sidebar-label"><i class="ti ti-server"></i> SOURCE STATUS</div>
+        <div class="source-status" id="sourceStatus">
+          <div class="source-item"><span class="source-name">NVD / NIST</span><span class="source-badge idle" id="src-nvd">IDLE</span></div>
+          <div class="source-item"><span class="source-name">CISA KEV</span><span class="source-badge idle" id="src-cisa">IDLE</span></div>
+          <div class="source-item"><span class="source-name">AlienVault OTX</span><span class="source-badge idle" id="src-otx">IDLE</span></div>
+          <div class="source-item"><span class="source-name">MalwareBazaar</span><span class="source-badge idle" id="src-malware">IDLE</span></div>
+          <div class="source-item"><span class="source-name">BleepingComputer</span><span class="source-badge idle" id="src-bc">IDLE</span></div>
+          <div class="source-item"><span class="source-name">The Hacker News</span><span class="source-badge idle" id="src-thn">IDLE</span></div>
+          <div class="source-item"><span class="source-name">SANS ISC</span><span class="source-badge idle" id="src-sans">IDLE</span></div>
+          <div class="source-item"><span class="source-name">SecurityWeek</span><span class="source-badge idle" id="src-sw">IDLE</span></div>
+          <div class="source-item"><span class="source-name">ArXiv CS.CR</span><span class="source-badge idle" id="src-arxiv">IDLE</span></div>
+          <div class="source-item">
+            <span class="source-name" id="ai-src-name">Claude Analysis</span>
+            <span class="source-badge idle" id="src-claude">IDLE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCAN BUTTON -->
+      <button class="scan-btn" id="scanBtn">
+        <i class="ti ti-radar"></i> RUN INTELLIGENCE SCAN
+      </button>
+
+      <div class="progress-bar-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <div class="stats-row">
+        <div class="stat-card total">
+          <div class="stat-label">Total Threats</div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-sub">this scan</div>
+        </div>
+        <div class="stat-card critical">
+          <div class="stat-label">Critical</div>
+          <div class="stat-value" id="statCritical">—</div>
+          <div class="stat-sub">immediate action</div>
+        </div>
+        <div class="stat-card ai-threats">
+          <div class="stat-label">AI-Related</div>
+          <div class="stat-value" id="statAI">—</div>
+          <div class="stat-sub">ai threat layer</div>
+        </div>
+        <div class="stat-card sector">
+          <div class="stat-label">Top Targeted</div>
+          <div class="stat-value" id="statSector">—</div>
+          <div class="stat-sub">most at risk sector</div>
+        </div>
+      </div>
+
+      <div class="digest-card" id="digestCard">
+        <div class="digest-header">
+          <i class="ti ti-file-analytics"></i>
+          <span>Daily Intelligence Digest</span>
+        </div>
+        <div class="digest-text" id="digestText"></div>
+      </div>
+
+      <div class="controls-bar">
+        <div class="controls-left">
+          <div class="results-count" id="resultsCount">Run a scan to load threats</div>
+        </div>
+        <select class="sort-select" id="sortSelect">
+          <option value="severity">Sort: Severity</option>
+          <option value="date">Sort: Date</option>
+          <option value="ai">Sort: AI First</option>
+        </select>
+      </div>
+
+      <div class="cards-grid" id="cardsGrid">
+        <div class="empty-state">
+          <i class="ti ti-radar"></i>
+          <h3>No threats loaded</h3>
+          <p>Configure your filters and API keys, then run an intelligence scan to collect threats.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" id="modalClose"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+
+<!-- Provider pill interaction -->
+<script type="module">
+import { setProvider, state } from './js/state.js';
+
+const PROVIDER_META = {
+  claude: { label: 'ANTHROPIC API KEY *', placeholder: 'sk-ant-...',  srcName: 'Claude Analysis'  },
+  openai: { label: 'OPENAI API KEY *',    placeholder: 'sk-...',      srcName: 'ChatGPT Analysis' },
+  gemini: { label: 'GOOGLE API KEY *',    placeholder: 'AIza...',     srcName: 'Gemini Analysis'  },
+  grok:   { label: 'XAI API KEY *',       placeholder: 'xai-...',     srcName: 'Grok Analysis'    },
+};
+
+const pills       = document.querySelectorAll('.provider-pill');
+const keyLabel    = document.getElementById('aiKeyLabel');
+const keyInput    = document.getElementById('keyAI');
+const aiSrcName   = document.getElementById('ai-src-name');
+
+pills.forEach(pill => {
+  pill.addEventListener('click', () => {
+    const provider = pill.dataset.provider;
+    pills.forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+
+    const meta = PROVIDER_META[provider];
+    keyLabel.textContent   = meta.label;
+    keyInput.placeholder   = meta.placeholder;
+    aiSrcName.textContent  = meta.srcName;
+
+    setProvider(provider);
+  });
+});
+</script>
+</body>
+</html>
