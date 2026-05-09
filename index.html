@@ -28,10 +28,10 @@
   display: flex; align-items: center; gap: 5px;
 }
 .provider-pill:hover { color: var(--text2); border-color: var(--border2); }
-.provider-pill.active[data-provider="claude"]  { background: rgba(0,255,136,0.1);   border-color: var(--green);           color: var(--green); }
-.provider-pill.active[data-provider="openai"]  { background: rgba(16,163,127,0.1);  border-color: #10a37f;                color: #10a37f; }
-.provider-pill.active[data-provider="gemini"]  { background: rgba(66,133,244,0.1);  border-color: #4285f4;                color: #4285f4; }
-.provider-pill.active[data-provider="grok"]    { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); color: var(--text); }
+.provider-pill.active[data-provider="claude"]  { background: rgba(0,255,136,0.1);    border-color: var(--green);            color: var(--green); }
+.provider-pill.active[data-provider="openai"]  { background: rgba(16,163,127,0.1);   border-color: #10a37f;                 color: #10a37f; }
+.provider-pill.active[data-provider="gemini"]  { background: rgba(66,133,244,0.1);   border-color: #4285f4;                 color: #4285f4; }
+.provider-pill.active[data-provider="grok"]    { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3);   color: var(--text); }
 
 /* ── NEWS CARD STYLES ───────────────────────────────── */
 .news-card {
@@ -45,10 +45,7 @@
   transition: border-color 0.2s, background 0.2s;
   animation: fadeInUp 0.3s ease both;
 }
-.news-card:hover {
-  border-color: var(--border2);
-  background: var(--bg3);
-}
+.news-card:hover { border-color: var(--border2); background: var(--bg3); }
 .news-card-header {
   display: flex;
   align-items: center;
@@ -129,10 +126,7 @@
 }
 .mode-banner i { color: var(--green); font-size: 14px; }
 .mode-banner strong { color: var(--green); }
-.mode-banner.ai-mode {
-  background: rgba(66,133,244,0.06);
-  border-color: rgba(66,133,244,0.2);
-}
+.mode-banner.ai-mode { background: rgba(66,133,244,0.06); border-color: rgba(66,133,244,0.2); }
 .mode-banner.ai-mode i,
 .mode-banner.ai-mode strong { color: #4285f4; }
 
@@ -164,11 +158,34 @@
   gap: 8px;
   transition: all 0.2s;
 }
-.analyze-btn:hover:not(:disabled) {
-  background: rgba(66,133,244,0.18);
-  border-color: #4285f4;
-}
+.analyze-btn:hover:not(:disabled) { background: rgba(66,133,244,0.18); border-color: #4285f4; }
 .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── TYPE FILTER BAR ────────────────────────────────── */
+.type-filter-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.type-filter {
+  padding: 5px 14px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.type-filter:hover { color: var(--text2); border-color: var(--border2); }
+.type-filter.active {
+  background: rgba(0,255,136,0.1);
+  border-color: var(--green);
+  color: var(--green);
+}
 </style>
 </head>
 <body>
@@ -206,23 +223,13 @@
         </div>
         <div class="keys-panel" id="keysPanel">
 
-          <!-- PROVIDER SELECTOR -->
           <div class="provider-pills" id="providerPills">
-            <div class="provider-pill active" data-provider="claude">
-              <i class="ti ti-sparkles"></i> Claude
-            </div>
-            <div class="provider-pill" data-provider="openai">
-              <i class="ti ti-brand-openai"></i> ChatGPT
-            </div>
-            <div class="provider-pill" data-provider="gemini">
-              <i class="ti ti-diamond"></i> Gemini
-            </div>
-            <div class="provider-pill" data-provider="grok">
-              <i class="ti ti-brand-x"></i> Grok
-            </div>
+            <div class="provider-pill active" data-provider="claude"><i class="ti ti-sparkles"></i> Claude</div>
+            <div class="provider-pill" data-provider="openai"><i class="ti ti-brand-openai"></i> ChatGPT</div>
+            <div class="provider-pill" data-provider="gemini"><i class="ti ti-diamond"></i> Gemini</div>
+            <div class="provider-pill" data-provider="grok"><i class="ti ti-brand-x"></i> Grok</div>
           </div>
 
-          <!-- DYNAMIC AI KEY INPUT -->
           <div class="key-input-group">
             <div class="key-label" id="aiKeyLabel">ANTHROPIC API KEY *</div>
             <div class="key-input-wrap">
@@ -230,8 +237,6 @@
               <button class="key-eye" data-target="keyAI"><i class="ti ti-eye"></i></button>
             </div>
           </div>
-
-          <!-- OTHER KEYS (unchanged) -->
           <div class="key-input-group">
             <div class="key-label">ALIENVAULT OTX KEY</div>
             <div class="key-input-wrap">
@@ -320,14 +325,14 @@
             </div>
           </div>
           <div class="cat-pills" id="aiCats">
-            <div class="cat-pill active ai" data-cat="AI Model Attacks"      data-group="ai">AI Model Attacks</div>
-            <div class="cat-pill active ai" data-cat="AI-Powered Attacks"    data-group="ai">AI-Powered Attacks</div>
-            <div class="cat-pill active ai" data-cat="LLM Vulnerabilities"   data-group="ai">LLM Vulnerabilities</div>
-            <div class="cat-pill active ai" data-cat="AI Supply Chain"       data-group="ai">AI Supply Chain</div>
-            <div class="cat-pill active ai" data-cat="AI Surveillance"       data-group="ai">AI Surveillance</div>
-            <div class="cat-pill active ai" data-cat="AI Infrastructure"     data-group="ai">AI Infrastructure</div>
+            <div class="cat-pill active ai" data-cat="AI Model Attacks"       data-group="ai">AI Model Attacks</div>
+            <div class="cat-pill active ai" data-cat="AI-Powered Attacks"     data-group="ai">AI-Powered Attacks</div>
+            <div class="cat-pill active ai" data-cat="LLM Vulnerabilities"    data-group="ai">LLM Vulnerabilities</div>
+            <div class="cat-pill active ai" data-cat="AI Supply Chain"        data-group="ai">AI Supply Chain</div>
+            <div class="cat-pill active ai" data-cat="AI Surveillance"        data-group="ai">AI Surveillance</div>
+            <div class="cat-pill active ai" data-cat="AI Infrastructure"      data-group="ai">AI Infrastructure</div>
             <div class="cat-pill active ai" data-cat="AI Policy & Regulation" data-group="ai">AI Policy &amp; Regulation</div>
-            <div class="cat-pill active ai" data-cat="AI Security Research"  data-group="ai">AI Security Research</div>
+            <div class="cat-pill active ai" data-cat="AI Security Research"   data-group="ai">AI Security Research</div>
           </div>
         </div>
       </div>
@@ -352,12 +357,9 @@
         </div>
       </div>
 
-      <!-- SCAN BUTTON (Mode 1: fetch news) -->
       <button class="scan-btn" id="scanBtn">
         <i class="ti ti-refresh"></i> REFRESH NEWS FEED
       </button>
-
-      <!-- ANALYZE BUTTON (Mode 2: AI analysis, on demand) -->
       <button class="analyze-btn" id="analyzeBtn" disabled title="Load news feed first">
         <i class="ti ti-brain"></i> ANALYZE WITH AI
       </button>
@@ -420,6 +422,17 @@
         <span><strong>NEWS FEED MODE</strong> — Live articles from all sources. Click <strong>ANALYZE WITH AI</strong> to get structured threat intelligence.</span>
       </div>
 
+      <!-- TYPE FILTER BAR -->
+      <div class="type-filter-bar" id="typeFilterBar">
+        <button class="type-filter active" data-type="all">All</button>
+        <button class="type-filter" data-type="cve">CVE / Exploit</button>
+        <button class="type-filter" data-type="malware">Malware</button>
+        <button class="type-filter" data-type="breach">Breach</button>
+        <button class="type-filter" data-type="ai">AI</button>
+        <button class="type-filter" data-type="news">News</button>
+        <button class="type-filter" data-type="research">Research</button>
+      </div>
+
       <div class="cards-grid" id="cardsGrid">
         <div class="empty-state">
           <i class="ti ti-loader"></i>
@@ -447,37 +460,5 @@
 </div>
 
 <script type="module" src="js/main.js"></script>
-
-<!-- Provider pill interaction -->
-<script type="module">
-import { setProvider, state } from './js/state.js';
-
-const PROVIDER_META = {
-  claude: { label: 'ANTHROPIC API KEY *', placeholder: 'sk-ant-...',  srcName: 'Claude Analysis'  },
-  openai: { label: 'OPENAI API KEY *',    placeholder: 'sk-...',      srcName: 'ChatGPT Analysis' },
-  gemini: { label: 'GOOGLE API KEY *',    placeholder: 'AIza...',     srcName: 'Gemini Analysis'  },
-  grok:   { label: 'XAI API KEY *',       placeholder: 'xai-...',     srcName: 'Grok Analysis'    },
-};
-
-const pills       = document.querySelectorAll('.provider-pill');
-const keyLabel    = document.getElementById('aiKeyLabel');
-const keyInput    = document.getElementById('keyAI');
-const aiSrcName   = document.getElementById('ai-src-name');
-
-pills.forEach(pill => {
-  pill.addEventListener('click', () => {
-    const provider = pill.dataset.provider;
-    pills.forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
-
-    const meta = PROVIDER_META[provider];
-    keyLabel.textContent   = meta.label;
-    keyInput.placeholder   = meta.placeholder;
-    aiSrcName.textContent  = meta.srcName;
-
-    setProvider(provider);
-  });
-});
-</script>
 </body>
 </html>

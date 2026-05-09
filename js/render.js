@@ -1,5 +1,6 @@
 import { threats, setThreats, rawNews, setRawNews } from './state.js';
 import { deepDive } from './ai.js';
+import { applyTypeFilter } from './filter.js';
 
 const AI_CATS = new Set([
   'AI Model Attacks', 'AI-Powered Attacks', 'LLM Vulnerabilities',
@@ -7,7 +8,6 @@ const AI_CATS = new Set([
   'AI Policy & Regulation', 'AI Security Research'
 ]);
 
-// Source badge colour mapping
 const SOURCE_COLORS = {
   'NVD / NIST':       '#ff6b6b',
   'CISA KEV':         '#ffa94d',
@@ -31,7 +31,7 @@ export function renderNewsCards(items) {
   const grid = document.getElementById('cardsGrid');
   if (!items || items.length === 0) {
     grid.innerHTML = `<div class="empty-state"><i class="ti ti-rss-off"></i><h3>No articles found</h3><p>Try adjusting your date range or check your network connection.</p></div>`;
-    return;
+    return; // applyTypeFilter not needed — no cards to filter
   }
 
   setRawNews(items);
@@ -71,6 +71,8 @@ export function renderNewsCards(items) {
       <i class="ti ti-rss"></i>
       <span><strong>NEWS FEED MODE</strong> — ${items.length} articles loaded. Click <strong>ANALYZE WITH AI</strong> for structured threat intelligence.</span>`;
   }
+
+  applyTypeFilter();
 }
 
 // ── MODE 2: AI-analyzed threat cards ───────────────────
@@ -78,7 +80,7 @@ export function renderCards(data) {
   const grid = document.getElementById('cardsGrid');
   if (!data || data.length === 0) {
     grid.innerHTML = `<div class="empty-state"><i class="ti ti-shield-off"></i><h3>No threats found</h3><p>Try adjusting your filters or date range.</p></div>`;
-    return;
+    return; // applyTypeFilter not needed — no cards to filter
   }
 
   const banner = document.getElementById('modeBanner');
@@ -137,6 +139,8 @@ export function renderCards(data) {
       deepDive(threats[idx], panel, null, apiKey, null);
     });
   });
+
+  applyTypeFilter();
 }
 
 export function sortCards() {
