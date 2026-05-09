@@ -32,6 +32,143 @@
 .provider-pill.active[data-provider="openai"]  { background: rgba(16,163,127,0.1);  border-color: #10a37f;                color: #10a37f; }
 .provider-pill.active[data-provider="gemini"]  { background: rgba(66,133,244,0.1);  border-color: #4285f4;                color: #4285f4; }
 .provider-pill.active[data-provider="grok"]    { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); color: var(--text); }
+
+/* ── NEWS CARD STYLES ───────────────────────────────── */
+.news-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 8px);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  animation: fadeInUp 0.3s ease both;
+}
+.news-card:hover {
+  border-color: var(--border2);
+  background: var(--bg3);
+}
+.news-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.news-source-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.2);
+  color: var(--green);
+  white-space: nowrap;
+}
+.news-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+}
+.news-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+.news-desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.news-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+.news-type-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text3);
+}
+.news-read-more {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--green);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s;
+}
+.news-read-more:hover { opacity: 0.75; }
+
+/* ── MODE BANNER ────────────────────────────────────── */
+.mode-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: rgba(0,255,136,0.06);
+  border: 1px solid rgba(0,255,136,0.15);
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+}
+.mode-banner i { color: var(--green); font-size: 14px; }
+.mode-banner strong { color: var(--green); }
+.mode-banner.ai-mode {
+  background: rgba(66,133,244,0.06);
+  border-color: rgba(66,133,244,0.2);
+}
+.mode-banner.ai-mode i,
+.mode-banner.ai-mode strong { color: #4285f4; }
+
+/* ── REFRESH INFO ───────────────────────────────────── */
+.refresh-info {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-left: auto;
+}
+
+/* ── ANALYZE BUTTON ─────────────────────────────────── */
+.analyze-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px;
+  background: rgba(66,133,244,0.1);
+  border: 1px solid rgba(66,133,244,0.35);
+  border-radius: var(--radius);
+  color: #4285f4;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.analyze-btn:hover:not(:disabled) {
+  background: rgba(66,133,244,0.18);
+  border-color: #4285f4;
+}
+.analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -215,9 +352,14 @@
         </div>
       </div>
 
-      <!-- SCAN BUTTON -->
+      <!-- SCAN BUTTON (Mode 1: fetch news) -->
       <button class="scan-btn" id="scanBtn">
-        <i class="ti ti-radar"></i> RUN INTELLIGENCE SCAN
+        <i class="ti ti-refresh"></i> REFRESH NEWS FEED
+      </button>
+
+      <!-- ANALYZE BUTTON (Mode 2: AI analysis, on demand) -->
+      <button class="analyze-btn" id="analyzeBtn" disabled title="Load news feed first">
+        <i class="ti ti-brain"></i> ANALYZE WITH AI
       </button>
 
       <div class="progress-bar-wrap" id="progressWrap">
@@ -262,8 +404,9 @@
 
       <div class="controls-bar">
         <div class="controls-left">
-          <div class="results-count" id="resultsCount">Run a scan to load threats</div>
+          <div class="results-count" id="resultsCount">Loading news feed…</div>
         </div>
+        <div class="refresh-info" id="refreshInfo"></div>
         <select class="sort-select" id="sortSelect">
           <option value="severity">Sort: Severity</option>
           <option value="date">Sort: Date</option>
@@ -271,11 +414,17 @@
         </select>
       </div>
 
+      <!-- MODE BANNER -->
+      <div class="mode-banner" id="modeBanner">
+        <i class="ti ti-rss"></i>
+        <span><strong>NEWS FEED MODE</strong> — Live articles from all sources. Click <strong>ANALYZE WITH AI</strong> to get structured threat intelligence.</span>
+      </div>
+
       <div class="cards-grid" id="cardsGrid">
         <div class="empty-state">
-          <i class="ti ti-radar"></i>
-          <h3>No threats loaded</h3>
-          <p>Configure your filters and API keys, then run an intelligence scan to collect threats.</p>
+          <i class="ti ti-loader"></i>
+          <h3>Fetching news feed…</h3>
+          <p>Loading articles from NVD, CISA, BleepingComputer, Hacker News, SANS, SecurityWeek, and ArXiv.</p>
         </div>
       </div>
 

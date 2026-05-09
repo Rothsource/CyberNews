@@ -1,4 +1,4 @@
-import { selectedSeverities, selectedCategories, setSelectedDate } from './state.js';
+import { selectedSeverities, selectedCategories, setSelectedDate, selectedDate } from './state.js';
 
 // ── CLOCK ──────────────────────────────────────────────
 export function updateClock() {
@@ -111,17 +111,19 @@ export function closeModal(e) {
 export function getDateRange() {
   const now = new Date();
   const fmt = d => d.toISOString().split('T')[0];
-  const { selectedDate } = window.__ciState || {};
 
-  if (!selectedDate || selectedDate === 'today') {
+  // Read live from state.js — not from window.__ciState which was never set
+  const range = selectedDate || 'today';
+
+  if (range === 'today') {
     return { from: fmt(now), to: fmt(now) };
-  } else if (selectedDate === 'yesterday') {
+  } else if (range === 'yesterday') {
     const y = new Date(now); y.setDate(y.getDate() - 1);
     return { from: fmt(y), to: fmt(y) };
-  } else if (selectedDate === '7d') {
+  } else if (range === '7d') {
     const s = new Date(now); s.setDate(s.getDate() - 7);
     return { from: fmt(s), to: fmt(now) };
-  } else if (selectedDate === '30d') {
+  } else if (range === '30d') {
     const s = new Date(now); s.setDate(s.getDate() - 30);
     return { from: fmt(s), to: fmt(now) };
   } else {

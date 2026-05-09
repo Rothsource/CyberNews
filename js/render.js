@@ -1,4 +1,4 @@
-import { threats, setThreats } from './state.js';
+import { threats, setThreats, rawNews, setRawNews } from './state.js';
 import { deepDive } from './ai.js';
 
 const AI_CATS = new Set([
@@ -7,17 +7,86 @@ const AI_CATS = new Set([
   'AI Policy & Regulation', 'AI Security Research'
 ]);
 
+// Source badge colour mapping
+const SOURCE_COLORS = {
+  'NVD / NIST':       '#ff6b6b',
+  'CISA KEV':         '#ffa94d',
+  'BleepingComputer': '#a9e34b',
+  'The Hacker News':  '#4dabf7',
+  'SANS ISC':         '#da77f2',
+  'SecurityWeek':     '#ffd43b',
+  'ArXiv CS.CR':      '#63e6be',
+  'AlienVault OTX':   '#ff8787',
+  'MalwareBazaar':    '#f783ac',
+};
+
 export function escHtml(str) {
   return String(str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── MODE 1: Raw news cards ──────────────────────────────
+export function renderNewsCards(items) {
+  const grid = document.getElementById('cardsGrid');
+  if (!items || items.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><i class="ti ti-rss-off"></i><h3>No articles found</h3><p>Try adjusting your date range or check your network connection.</p></div>`;
+    return;
+  }
+
+  setRawNews(items);
+
+  grid.innerHTML = items.map((item, i) => {
+    const color = SOURCE_COLORS[item.source] || 'var(--green)';
+    const sourceStyle = `background:${color}18; border-color:${color}40; color:${color}`;
+    const hasLink = item.raw_link && item.raw_link.startsWith('http');
+    const readMoreEl = hasLink
+      ? `<a class="news-read-more" href="${escHtml(item.raw_link)}" target="_blank" rel="noopener">
+           Read More <i class="ti ti-external-link"></i>
+         </a>`
+      : '';
+
+    return `
+      <div class="news-card" style="animation-delay:${i * 0.04}s">
+        <div class="news-card-header">
+          <span class="news-source-badge" style="${sourceStyle}">${escHtml(item.source)}</span>
+          <span class="news-date">${escHtml(item.raw_date || '')}</span>
+        </div>
+        <div class="news-title">${escHtml(item.raw_title || '')}</div>
+        ${item.raw_desc ? `<div class="news-desc">${escHtml(item.raw_desc)}</div>` : ''}
+        <div class="news-footer">
+          <span class="news-type-badge">${escHtml(item.type || 'NEWS')}</span>
+          ${readMoreEl}
+        </div>
+      </div>`;
+  }).join('');
+
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  if (analyzeBtn) analyzeBtn.disabled = false;
+
+  const banner = document.getElementById('modeBanner');
+  if (banner) {
+    banner.className = 'mode-banner';
+    banner.innerHTML = `
+      <i class="ti ti-rss"></i>
+      <span><strong>NEWS FEED MODE</strong> — ${items.length} articles loaded. Click <strong>ANALYZE WITH AI</strong> for structured threat intelligence.</span>`;
+  }
+}
+
+// ── MODE 2: AI-analyzed threat cards ───────────────────
 export function renderCards(data) {
   const grid = document.getElementById('cardsGrid');
   if (!data || data.length === 0) {
     grid.innerHTML = `<div class="empty-state"><i class="ti ti-shield-off"></i><h3>No threats found</h3><p>Try adjusting your filters or date range.</p></div>`;
     return;
+  }
+
+  const banner = document.getElementById('modeBanner');
+  if (banner) {
+    banner.className = 'mode-banner ai-mode';
+    banner.innerHTML = `
+      <i class="ti ti-brain"></i>
+      <span><strong>AI ANALYSIS MODE</strong> — ${data.length} structured threats. Refresh news feed to start over.</span>`;
   }
 
   grid.innerHTML = data.map((t, i) => {
@@ -62,12 +131,10 @@ export function renderCards(data) {
 
   grid.querySelectorAll('.deep-dive-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx      = parseInt(btn.dataset.index, 10);
-      const panel    = document.getElementById('dd-' + idx);
-      const provider = document.getElementById('aiProvider').value;
-      const apiKey   = document.getElementById('keyAI').value.trim();
-      const model    = document.getElementById('aiModel').value;
-      deepDive(threats[idx], panel, provider, apiKey, model);
+      const idx    = parseInt(btn.dataset.index, 10);
+      const panel  = document.getElementById('dd-' + idx);
+      const apiKey = document.getElementById('keyAI').value.trim();
+      deepDive(threats[idx], panel, null, apiKey, null);
     });
   });
 }
@@ -75,9 +142,16 @@ export function renderCards(data) {
 export function sortCards() {
   const mode     = document.getElementById('sortSelect').value;
   const sevOrder = { Critical:0, High:1, Medium:2, Low:3 };
-  const sorted   = [...threats];
-  if (mode === 'severity') sorted.sort((a,b) => (sevOrder[a.severity]??4)-(sevOrder[b.severity]??4));
-  else if (mode === 'date') sorted.sort((a,b) => (b.date||'').localeCompare(a.date||''));
-  else if (mode === 'ai')   sorted.sort((a,b) => (b.is_ai_related?1:0)-(a.is_ai_related?1:0));
-  renderCards(sorted);
+
+  if (threats && threats.length > 0) {
+    const sorted = [...threats];
+    if (mode === 'severity') sorted.sort((a,b) => (sevOrder[a.severity]??4)-(sevOrder[b.severity]??4));
+    else if (mode === 'date') sorted.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    else if (mode === 'ai')   sorted.sort((a,b) => (b.is_ai_related?1:0)-(a.is_ai_related?1:0));
+    renderCards(sorted);
+  } else if (rawNews && rawNews.length > 0) {
+    const sorted = [...rawNews];
+    if (mode === 'date') sorted.sort((a,b) => (b.raw_date||'').localeCompare(a.raw_date||''));
+    renderNewsCards(sorted);
+  }
 }

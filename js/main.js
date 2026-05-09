@@ -1,6 +1,6 @@
 import { toggleKeys, toggleKeyVis, setDate, toggleSev, toggleCat, selectGroup, clearGroup, selectAll, closeModal } from './ui.js';
 import { sortCards } from './render.js';
-import { runScan } from './scan.js';
+import { fetchNews, analyzeNews } from './scan.js';
 import { setProvider } from './state.js';
 
 // ── PROVIDER PILLS ─────────────────────────────────────
@@ -36,7 +36,11 @@ document.querySelectorAll('.key-eye').forEach(btn => {
 
 // ── DATE PILLS ─────────────────────────────────────────
 document.querySelectorAll('.date-pill').forEach(pill => {
-  pill.addEventListener('click', () => setDate(pill));
+  pill.addEventListener('click', () => {
+    setDate(pill);
+    // Re-fetch when date changes (Mode 1 active)
+    fetchNews();
+  });
 });
 
 // ── SEVERITY PILLS ─────────────────────────────────────
@@ -56,10 +60,18 @@ document.querySelectorAll('.cat-ctrl-btn').forEach(btn => {
 });
 document.getElementById('selectAllBtn').addEventListener('click', selectAll);
 
-// ── SCAN / SORT / MODAL ────────────────────────────────
-document.getElementById('scanBtn').addEventListener('click', runScan);
+// ── SCAN BTN (Mode 1 — refresh news feed) ─────────────
+document.getElementById('scanBtn').addEventListener('click', fetchNews);
+
+// ── ANALYZE BTN (Mode 2 — AI analysis on demand) ──────
+document.getElementById('analyzeBtn').addEventListener('click', analyzeNews);
+
+// ── SORT / MODAL ───────────────────────────────────────
 document.getElementById('sortSelect').addEventListener('change', sortCards);
 document.getElementById('modalBackdrop').addEventListener('click', closeModal);
 document.getElementById('modalClose').addEventListener('click', () => {
   document.getElementById('modalBackdrop').classList.remove('show');
 });
+
+// ── AUTO-LOAD NEWS FEED ON PAGE OPEN ──────────────────
+fetchNews();

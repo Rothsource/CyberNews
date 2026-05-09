@@ -18,6 +18,7 @@ export function setIsScanning(v)       { isScanning = v; }
 export function setProvider(name)      { selectedProvider = name; state.selectedProvider = name; }
 
 // Exported state object (for modules that import state directly)
-export const state = {
-  selectedProvider: 'claude'
-};
+export let rawNews = [];
+export function setRawNews(items) { rawNews = items; }
+
+export const state = { selectedProvider: 'claude' };
