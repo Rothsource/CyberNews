@@ -3,7 +3,6 @@ import { sortCards } from './render.js';
 import { fetchNews, analyzeNews } from './scan.js';
 import { setProvider } from './state.js';
 
-// ── PROVIDER PILLS ─────────────────────────────────────
 const PROVIDER_META = {
   claude: { label: 'ANTHROPIC API KEY *', placeholder: 'sk-ant-...',  srcName: 'Claude Analysis'  },
   openai: { label: 'OPENAI API KEY *',    placeholder: 'sk-...',      srcName: 'ChatGPT Analysis' },
@@ -28,41 +27,30 @@ document.querySelectorAll('.provider-pill').forEach(pill => {
   });
 });
 
-// ── API KEY PANEL ──────────────────────────────────────
 document.getElementById('keysToggle').addEventListener('click', toggleKeys);
 document.querySelectorAll('.key-eye').forEach(btn => {
   btn.addEventListener('click', () => toggleKeyVis(btn.dataset.target, btn));
 });
 
-// ── DATE PILLS ─────────────────────────────────────────
+// Date pills — re-fetch on change, skip custom until both dates filled
 document.querySelectorAll('.date-pill').forEach(pill => {
   pill.addEventListener('click', () => {
     setDate(pill);
-    // Don't auto-fetch for custom — wait for user to fill in both dates
-    if (pill.dataset.range !== 'custom') {
-      fetchNews();
-    }
+    if (pill.dataset.range !== 'custom') fetchNews();
   });
 });
 
-// Custom date inputs — fetch when user finishes entering both dates
 const dateFrom = document.getElementById('dateFrom');
 const dateTo   = document.getElementById('dateTo');
-
 function onCustomDateChange() {
-  if (dateFrom.value && dateTo.value) {
-    fetchNews();
-  }
+  if (dateFrom.value && dateTo.value) fetchNews();
 }
 dateFrom.addEventListener('change', onCustomDateChange);
 dateTo.addEventListener('change', onCustomDateChange);
 
-// ── SEVERITY PILLS ─────────────────────────────────────
 document.querySelectorAll('.sev-pill').forEach(pill => {
   pill.addEventListener('click', () => toggleSev(pill));
 });
-
-// ── CATEGORY PILLS ─────────────────────────────────────
 document.querySelectorAll('.cat-pill').forEach(pill => {
   pill.addEventListener('click', () => toggleCat(pill));
 });
@@ -74,16 +62,30 @@ document.querySelectorAll('.cat-ctrl-btn').forEach(btn => {
 });
 document.getElementById('selectAllBtn').addEventListener('click', selectAll);
 
-// ── SCAN / ANALYZE BTNS ────────────────────────────────
+// Scan button
 document.getElementById('scanBtn').addEventListener('click', fetchNews);
-document.getElementById('analyzeBtn').addEventListener('click', analyzeNews);
 
-// ── SORT / MODAL ───────────────────────────────────────
+// Analyze button — reads selected AI mode
+document.getElementById('analyzeBtn').addEventListener('click', () => {
+  const mode = document.getElementById('aiModeSelect')?.value || 'general';
+  analyzeNews(mode);
+});
+
+// AI mode pills
+document.querySelectorAll('.ai-mode-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.ai-mode-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    if (document.getElementById('aiModeSelect')) {
+      document.getElementById('aiModeSelect').value = pill.dataset.mode;
+    }
+  });
+});
+
 document.getElementById('sortSelect').addEventListener('change', sortCards);
 document.getElementById('modalBackdrop').addEventListener('click', closeModal);
 document.getElementById('modalClose').addEventListener('click', () => {
   document.getElementById('modalBackdrop').classList.remove('show');
 });
 
-// ── AUTO-LOAD ON PAGE OPEN ─────────────────────────────
 fetchNews();
