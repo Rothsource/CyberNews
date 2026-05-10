@@ -10,15 +10,26 @@ export let selectedCategories = new Set([
   'AI Policy & Regulation', 'AI Security Research'
 ]);
 export let isScanning = false;
-export let selectedProvider = 'claude'; // 'claude' | 'openai' | 'gemini' | 'grok'
+export let selectedProvider = 'claude';
 
-export function setThreats(data)       { threats = data; }
-export function setSelectedDate(d)     { selectedDate = d; }
-export function setIsScanning(v)       { isScanning = v; }
-export function setProvider(name)      { selectedProvider = name; state.selectedProvider = name; }
-
-// Exported state object (for modules that import state directly)
 export let rawNews = [];
 export function setRawNews(items) { rawNews = items; }
 
-export const state = { selectedProvider: 'claude' };
+export function setThreats(data)   { threats = data; }
+export function setIsScanning(v)   { isScanning = v; }
+
+export function setSelectedDate(d) {
+  selectedDate = d;
+  state.selectedDate = d; // keep state object in sync
+}
+
+export function setProvider(name) {
+  selectedProvider = name;
+  state.selectedProvider = name;
+}
+
+// State object — use this for reading in other modules to always get live values
+export const state = {
+  selectedDate:     'today',
+  selectedProvider: 'claude',
+};

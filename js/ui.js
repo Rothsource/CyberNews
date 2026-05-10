@@ -1,4 +1,4 @@
-import { selectedSeverities, selectedCategories, setSelectedDate, selectedDate } from './state.js';
+import { selectedSeverities, selectedCategories, setSelectedDate, state } from './state.js';
 
 // ── CLOCK ──────────────────────────────────────────────
 export function updateClock() {
@@ -112,8 +112,8 @@ export function getDateRange() {
   const now = new Date();
   const fmt = d => d.toISOString().split('T')[0];
 
-  // Read live from state.js — not from window.__ciState which was never set
-  const range = selectedDate || 'today';
+  // Read from state object — always gets the current value, not a stale snapshot
+  const range = state.selectedDate || 'today';
 
   if (range === 'today') {
     return { from: fmt(now), to: fmt(now) };
