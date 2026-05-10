@@ -8,31 +8,56 @@ async function proxyFetch(url) {
   return await res.text();
 }
 
+// Split a date range into chunks of max 120 days
+function splitDateRange(from, to, maxDays = 110) {
+  const chunks = [];
+  let start = new Date(from);
+  const end = new Date(to);
+  while (start <= end) {
+    const chunkEnd = new Date(start);
+    chunkEnd.setDate(chunkEnd.getDate() + maxDays);
+    if (chunkEnd > end) chunkEnd.setTime(end.getTime());
+    chunks.push({
+      from: start.toISOString().split('T')[0],
+      to:   chunkEnd.toISOString().split('T')[0],
+    });
+    start = new Date(chunkEnd);
+    start.setDate(start.getDate() + 1);
+  }
+  return chunks;
+}
+
 // ── NVD / NIST ─────────────────────────────────────────
 export async function fetchNVD(dateRange) {
   setSrc('nvd', 'loading', 'FETCHING');
   try {
-    const start = dateRange.from + 'T00:00:00.000';
-    const end   = dateRange.to   + 'T23:59:59.999';
-    const url   = `https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=${encodeURIComponent(start)}&pubEndDate=${encodeURIComponent(end)}&resultsPerPage=15`;
-    const res   = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    const data  = await res.json();
+    const chunks = splitDateRange(dateRange.from, dateRange.to);
+    const results = [];
+    for (const chunk of chunks) {
+      const start = chunk.from + 'T00:00:00.000';
+      const end   = chunk.to   + 'T23:59:59.999';
+      const url   = `https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=${encodeURIComponent(start)}&pubEndDate=${encodeURIComponent(end)}&resultsPerPage=15`;
+      const res   = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!res.ok) continue;
+      const data  = await res.json();
+      (data.vulnerabilities || []).forEach(v => {
+        const cve  = v.cve;
+        const desc = cve.descriptions?.find(d => d.lang === 'en')?.value || '';
+        const cvss = cve.metrics?.cvssMetricV31?.[0]?.cvssData?.baseScore
+                  || cve.metrics?.cvssMetricV30?.[0]?.cvssData?.baseScore
+                  || cve.metrics?.cvssMetricV2?.[0]?.cvssData?.baseScore || 0;
+        results.push({
+          source:    'NVD / NIST',
+          raw_title: cve.id,
+          raw_desc:  desc,
+          raw_cvss:  cvss,
+          raw_date:  cve.published?.split('T')[0] || dateRange.to,
+          type:      'CVE'
+        });
+      });
+    }
     setSrc('nvd', 'ok', 'OK ✓');
-    return (data.vulnerabilities || []).map(v => {
-      const cve  = v.cve;
-      const desc = cve.descriptions?.find(d => d.lang === 'en')?.value || '';
-      const cvss = cve.metrics?.cvssMetricV31?.[0]?.cvssData?.baseScore
-                || cve.metrics?.cvssMetricV30?.[0]?.cvssData?.baseScore
-                || cve.metrics?.cvssMetricV2?.[0]?.cvssData?.baseScore || 0;
-      return {
-        source:    'NVD / NIST',
-        raw_title: cve.id,
-        raw_desc:  desc,
-        raw_cvss:  cvss,
-        raw_date:  cve.published?.split('T')[0] || dateRange.to,
-        type:      'CVE'
-      };
-    });
+    return results;
   } catch (e) {
     setSrc('nvd', 'err', 'ERR');
     return [];
@@ -43,23 +68,29 @@ export async function fetchNVD(dateRange) {
 export async function fetchCISA(dateRange) {
   setSrc('cisa', 'loading', 'FETCHING');
   try {
-    const start = dateRange.from + 'T00:00:00.000';
-    const end   = dateRange.to   + 'T23:59:59.999';
-    const url   = `https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=${encodeURIComponent(start)}&pubEndDate=${encodeURIComponent(end)}&cvssV3Severity=CRITICAL&resultsPerPage=10`;
-    const res   = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    const data  = await res.json();
+    const chunks = splitDateRange(dateRange.from, dateRange.to);
+    const results = [];
+    for (const chunk of chunks) {
+      const start = chunk.from + 'T00:00:00.000';
+      const end   = chunk.to   + 'T23:59:59.999';
+      const url   = `https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=${encodeURIComponent(start)}&pubEndDate=${encodeURIComponent(end)}&cvssV3Severity=CRITICAL&resultsPerPage=10`;
+      const res   = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!res.ok) continue;
+      const data  = await res.json();
+      (data.vulnerabilities || []).forEach(v => {
+        const cve  = v.cve;
+        const desc = cve.descriptions?.find(d => d.lang === 'en')?.value || '';
+        results.push({
+          source:    'CISA KEV',
+          raw_title: cve.id + (cve.cisaVulnerabilityName ? ' — ' + cve.cisaVulnerabilityName : ''),
+          raw_desc:  desc + (cve.cisaRequiredAction ? ' Required action: ' + cve.cisaRequiredAction : ''),
+          raw_date:  cve.published?.split('T')[0] || dateRange.from,
+          type:      'EXPLOIT'
+        });
+      });
+    }
     setSrc('cisa', 'ok', 'OK ✓');
-    return (data.vulnerabilities || []).map(v => {
-      const cve  = v.cve;
-      const desc = cve.descriptions?.find(d => d.lang === 'en')?.value || '';
-      return {
-        source:    'CISA KEV',
-        raw_title: cve.id + (cve.cisaVulnerabilityName ? ' — ' + cve.cisaVulnerabilityName : ''),
-        raw_desc:  desc + (cve.cisaRequiredAction ? ' Required action: ' + cve.cisaRequiredAction : ''),
-        raw_date:  cve.published?.split('T')[0] || dateRange.from,
-        type:      'EXPLOIT'
-      };
-    });
+    return results;
   } catch (e) {
     setSrc('cisa', 'err', 'ERR');
     return [];
@@ -89,7 +120,7 @@ export async function fetchRSS(id, feedUrl, sourceName) {
   }
 }
 
-// ── ARXIV (via proxy — direct fetch blocked by CORS) ───
+// ── ARXIV (via proxy) ──────────────────────────────────
 export async function fetchArXiv() {
   setSrc('arxiv', 'loading', 'FETCHING');
   try {
@@ -138,11 +169,10 @@ export async function fetchOTX(apiKey) {
   }
 }
 
-// ── MALWAREBAZAAR (via proxy — direct fetch blocked by CORS) ──
+// ── MALWAREBAZAAR (via proxy with POST) ────────────────
 export async function fetchMalwareBazaar() {
   setSrc('malware', 'loading', 'FETCHING');
   try {
-    // Use proxy with POST encoded as query param so the proxy can forward it
     const text = await proxyFetch('https://mb-api.abuse.ch/api/v1/');
     const data = JSON.parse(text);
     setSrc('malware', 'ok', 'OK ✓');

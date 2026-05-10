@@ -2,7 +2,6 @@ import { toggleKeys, toggleKeyVis, setDate, toggleSev, toggleCat, selectGroup, c
 import { sortCards } from './render.js';
 import { fetchNews, analyzeNews } from './scan.js';
 import { setProvider } from './state.js';
-import { initTypeFilter } from './filter.js';
 
 // ── PROVIDER PILLS ─────────────────────────────────────
 const PROVIDER_META = {
@@ -39,9 +38,24 @@ document.querySelectorAll('.key-eye').forEach(btn => {
 document.querySelectorAll('.date-pill').forEach(pill => {
   pill.addEventListener('click', () => {
     setDate(pill);
-    fetchNews();
+    // Don't auto-fetch for custom — wait for user to fill in both dates
+    if (pill.dataset.range !== 'custom') {
+      fetchNews();
+    }
   });
 });
+
+// Custom date inputs — fetch when user finishes entering both dates
+const dateFrom = document.getElementById('dateFrom');
+const dateTo   = document.getElementById('dateTo');
+
+function onCustomDateChange() {
+  if (dateFrom.value && dateTo.value) {
+    fetchNews();
+  }
+}
+dateFrom.addEventListener('change', onCustomDateChange);
+dateTo.addEventListener('change', onCustomDateChange);
 
 // ── SEVERITY PILLS ─────────────────────────────────────
 document.querySelectorAll('.sev-pill').forEach(pill => {
@@ -70,9 +84,6 @@ document.getElementById('modalBackdrop').addEventListener('click', closeModal);
 document.getElementById('modalClose').addEventListener('click', () => {
   document.getElementById('modalBackdrop').classList.remove('show');
 });
-
-// ── TYPE FILTER ────────────────────────────────────────
-initTypeFilter();
 
 // ── AUTO-LOAD ON PAGE OPEN ─────────────────────────────
 fetchNews();
