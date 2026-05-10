@@ -1,21 +1,64 @@
 const TYPE_MAP = {
-  cve:      { types: ['CVE'],                       cats: ['CVE/Exploit'] },
-  malware:  { types: ['MALWARE', 'MALWAREBAZAAR'],  cats: ['Malware/Ransomware', 'New Tool'] },
-  breach:   { types: ['BREACH', 'DATA BREACH'],     cats: ['Data Breach'] },
-  ai:       { types: ['AI'],                        cats: ['AI Model Attacks','AI-Powered Attacks','LLM Vulnerabilities','AI Supply Chain','AI Surveillance','AI Infrastructure','AI Policy & Regulation','AI Security Research'] },
-  news:     { types: ['NEWS', 'ARTICLE'],           cats: ['Cyber Attack','Nation-State','Threat Actor'] },
-  research: { types: ['RESEARCH', 'ARXIV'],         cats: ['New Technology','AI Security Research'] },
+  cve: {
+    types: ['cve'],
+    cats: ['cve/exploit']
+  },
+  malware: {
+    types: ['malware', 'malwarebazaar'],
+    cats: ['malware/ransomware', 'new tool']
+  },
+  breach: {
+    types: ['breach', 'data breach'],
+    cats: ['data breach']
+  },
+  ai: {
+    types: ['ai'],
+    cats: [
+      'ai model attacks',
+      'ai-powered attacks',
+      'llm vulnerabilities',
+      'ai supply chain',
+      'ai surveillance',
+      'ai infrastructure',
+      'ai policy & regulation',
+      'ai security research'
+    ]
+  },
+  news: {
+    types: ['news', 'article'],
+    cats: ['cyber attack', 'nation-state', 'threat actor']
+  },
+  research: {
+    types: ['research', 'arxiv'],
+    cats: ['new technology', 'ai security research']
+  }
 };
 
 let activeTypeFilter = 'all';
 
+// 🔧 Normalize helper (key fix)
+function normalize(text) {
+  return (text || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' '); // remove double spaces
+}
+
 export function initTypeFilter() {
-  document.getElementById('typeFilterBar').addEventListener('click', e => {
+  const bar = document.getElementById('typeFilterBar');
+  if (!bar) return;
+
+  bar.addEventListener('click', e => {
     const btn = e.target.closest('.type-filter');
     if (!btn) return;
-    document.querySelectorAll('.type-filter').forEach(b => b.classList.remove('active'));
+
+    document.querySelectorAll('.type-filter').forEach(b =>
+      b.classList.remove('active')
+    );
+
     btn.classList.add('active');
     activeTypeFilter = btn.dataset.type;
+
     applyTypeFilter();
   });
 }
@@ -24,24 +67,42 @@ export function applyTypeFilter() {
   const grid = document.getElementById('cardsGrid');
   if (!grid) return;
 
+  const allCards = grid.querySelectorAll('.news-card, .threat-card');
+
+  // ✅ Show all
   if (activeTypeFilter === 'all') {
-    grid.querySelectorAll('.news-card, .threat-card').forEach(c => c.style.display = '');
+    allCards.forEach(c => (c.style.display = ''));
     return;
   }
 
   const map = TYPE_MAP[activeTypeFilter];
   if (!map) return;
 
-  // Mode 1 — news cards: match .news-type-badge text
+  // Normalize config once
+  const typeList = map.types.map(normalize);
+  const catList = map.cats.map(normalize);
+
+  // 🔹 Mode 1 — news cards
   grid.querySelectorAll('.news-card').forEach(card => {
     const badge = card.querySelector('.news-type-badge');
-    const val = badge ? badge.textContent.trim().toUpperCase() : '';
-    card.style.display = map.types.includes(val) ? '' : 'none';
+    const val = normalize(badge?.textContent);
+
+    // ✅ flexible match (includes instead of exact)
+    const match = typeList.some(t => val.includes(t));
+
+    card.style.display = match ? '' : 'none';
   });
 
-  // Mode 2 — threat cards: match .cat-badge text
+  // 🔹 Mode 2 — threat cards
   grid.querySelectorAll('.threat-card').forEach(card => {
-    const badges = [...card.querySelectorAll('.cat-badge')].map(b => b.textContent.trim());
-    card.style.display = badges.some(b => map.cats.includes(b)) ? '' : 'none';
+    const badges = [...card.querySelectorAll('.cat-badge')]
+      .map(b => normalize(b.textContent));
+
+    // ✅ flexible + resilient match
+    const match = badges.some(b =>
+      catList.some(c => b.includes(c))
+    );
+
+    card.style.display = match ? '' : 'none';
   });
 }
